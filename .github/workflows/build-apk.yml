@@ -1,4 +1,4 @@
-name: Build MYRAA Next Android APK
+name: Build MYRAA Android APK
 
 on:
   workflow_dispatch:
@@ -28,18 +28,29 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Check Android project files
+      - name: Find Android project files
         run: |
-          test -f settings.gradle || test -f settings.gradle.kts
-          test -f build.gradle || test -f build.gradle.kts
-          test -f app/build.gradle || test -f app/build.gradle.kts
+          echo "Repository files:"
+          find . -maxdepth 4 -type f | head -200
+          echo "Gradle settings files:"
+          find . -type f \( -name settings.gradle -o -name settings.gradle.kts \)
 
       - name: Build APK
-        run: gradle assembleDebug
+        run: |
+          if [ -f settings.gradle ] || [ -f settings.gradle.kts ]; then
+            gradle assembleDebug
+          elif [ -f MYRAA-Android-Project/settings.gradle ] || [ -f MYRAA-Android-Project/settings.gradle.kts ]; then
+            cd MYRAA-Android-Project
+            gradle assembleDebug
+          else
+            echo "ERROR: Android Gradle project nahi mila."
+            echo "ZIP ke andar project hai to pehle uska exact folder path pata karo."
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MYRAA-Next-Android-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: MYRAA-Android-APK
+          path: '**/build/outputs/apk/debug/*.apk'
           if-no-files-found: error
