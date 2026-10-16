@@ -28,29 +28,18 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Find Android project files
+      - name: Extract Android package
         run: |
-          echo "Repository files:"
-          find . -maxdepth 4 -type f | head -200
-          echo "Gradle settings files:"
-          find . -type f \( -name settings.gradle -o -name settings.gradle.kts \)
+          unzip -q MYRAA-Full-Android-Package.zip -d unpacked
 
-      - name: Build APK
+      - name: Build Android APK
         run: |
-          if [ -f settings.gradle ] || [ -f settings.gradle.kts ]; then
-            gradle assembleDebug
-          elif [ -f MYRAA-Android-Project/settings.gradle ] || [ -f MYRAA-Android-Project/settings.gradle.kts ]; then
-            cd MYRAA-Android-Project
-            gradle assembleDebug
-          else
-            echo "ERROR: Android Gradle project nahi mila."
-            echo "ZIP ke andar project hai to pehle uska exact folder path pata karo."
-            exit 1
-          fi
+          cd unpacked/MYRAA-Full-Android-Package/MYRAA-Android-Project
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MYRAA-Android-APK
-          path: '**/build/outputs/apk/debug/*.apk'
+          path: unpacked/MYRAA-Full-Android-Package/MYRAA-Android-Project/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
